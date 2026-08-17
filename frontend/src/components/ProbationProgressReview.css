@@ -1,0 +1,336 @@
+@import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+.probation-app{
+  --navy:#16233F;
+  --slate:#5A6577;
+  --slate-light:#8A93A6;
+  --bg:#EEF1F6;
+  --card:#FFFFFF;
+  --border:#E1E5EC;
+  --border-soft:#EDEFF3;
+
+  --hr:#3457D5;      --hr-bg:#EEF1FD;
+  --employee:#1E8A73; --employee-bg:#EAF6F3;
+  --supervisor:#B5722A; --supervisor-bg:#FBF2E7;
+  --sbu:#7A3FA0;      --sbu-bg:#F5EEF9;
+
+  --grade-a:#1E8A57;
+  --grade-b:#2A6DB5;
+  --grade-c:#B5872A;
+  --grade-d:#C0392B;
+
+  --status-not-started:#B0B8C6;
+  --status-in-progress:#B5872A;
+  --status-completed:#1E8A57;
+
+  --radius:10px;
+  --font-display:'Libre Franklin', Inter, system-ui, sans-serif;
+  --font-body:'Inter', system-ui, -apple-system, sans-serif;
+
+  background:var(--bg);
+  font-family:var(--font-body);
+  color:var(--navy);
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:48px;
+  min-height:100vh;
+}
+
+.probation-app *{box-sizing:border-box;}
+
+/* ============ TOP BAR ============ */
+.probation-app .topbar{
+  position:sticky; top:0; z-index:50;
+  background:var(--navy);
+  color:#fff;
+  padding:14px 28px;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  box-shadow:0 2px 10px rgba(22,35,63,0.18);
+}
+.probation-app .topbar-left{display:flex; flex-direction:column; gap:2px;}
+.probation-app .topbar-eyebrow{
+  font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+  color:#9FB0D9; font-weight:600;
+}
+.probation-app .topbar-title{font-family:var(--font-display); font-size:18px; font-weight:700;}
+.probation-app .topbar-right{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+.probation-app .status-pill{
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14);
+  border-radius:100px; padding:7px 14px; font-size:12px; font-weight:600;
+}
+.probation-app .icon-btn{
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.16);
+  color:#fff; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:600;
+  cursor:pointer; font-family:var(--font-body); transition:background .15s;
+}
+.probation-app .icon-btn:hover{background:rgba(255,255,255,0.16);}
+
+.probation-app .error-banner{
+  max-width:1180px; margin:16px auto 0; padding:12px 18px;
+  background:#FBEAEA; border:1px solid #F0C4C4; color:#A93226;
+  border-radius:8px; font-size:13.5px; font-weight:600;
+}
+
+/* ============ SHELL / LAYOUT ============ */
+.probation-app .shell{
+  max-width:1180px; margin:0 auto; padding:32px 28px 0;
+  display:grid; grid-template-columns:200px 1fr; gap:32px;
+  align-items:start;
+}
+
+/* ============ NAV RAIL ============ */
+.probation-app .rail{
+  position:sticky; top:84px;
+  display:flex; flex-direction:column; gap:2px;
+  padding:6px 0;
+}
+.probation-app .rail-item{
+  display:flex; align-items:center; gap:10px;
+  padding:9px 10px; border-radius:8px; cursor:pointer;
+  font-size:13px; font-weight:600; color:var(--slate);
+  text-decoration:none; border-left:2px solid transparent;
+  transition:background .15s, color .15s;
+}
+.probation-app .rail-item:hover{background:#fff;}
+.probation-app .rail-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0; background:var(--status-not-started);}
+.probation-app .rail-dot--in_progress{background:var(--status-in-progress);}
+.probation-app .rail-dot--completed{background:var(--status-completed);}
+.probation-app .rail-label small{display:block; font-weight:500; color:var(--slate-light); font-size:11px; margin-top:1px;}
+
+/* ============ HEADER SUMMARY ============ */
+.probation-app .doc-header{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  padding:22px 26px; margin-bottom:22px;
+}
+.probation-app .doc-title{font-family:var(--font-display); font-size:26px; font-weight:800; margin:0 0 4px;}
+.probation-app .doc-sub{font-size:13px; color:var(--slate); margin:0 0 18px; line-height:1.6;}
+.probation-app .id-row{display:grid; grid-template-columns:1fr 220px; gap:20px;}
+.probation-app .field{display:flex; flex-direction:column; gap:6px;}
+.probation-app .field label{font-size:12px; font-weight:600; color:var(--slate); letter-spacing:0.01em;}
+.probation-app .field input,
+.probation-app .field select,
+.probation-app .field textarea{
+  font-family:var(--font-body); font-size:14px; color:var(--navy);
+  border:1px solid var(--border); border-radius:7px;
+  padding:9px 11px; background:#fff; outline:none;
+  transition:border-color .15s, box-shadow .15s;
+  width:100%;
+}
+.probation-app .field input:focus,
+.probation-app .field select:focus,
+.probation-app .field textarea:focus{
+  border-color:var(--hr); box-shadow:0 0 0 3px rgba(52,87,213,0.12);
+}
+.probation-app .field textarea{resize:vertical; min-height:80px; line-height:1.5;}
+.probation-app .field input:disabled,
+.probation-app .field textarea:disabled{
+  background:#F5F6F9; color:var(--slate); cursor:not-allowed; border-color:var(--border-soft);
+}
+
+/* ============ SECTION CARD ============ */
+.probation-app .section{
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  margin-bottom:22px; overflow:hidden; scroll-margin-top:84px;
+}
+.probation-app .section-head{
+  display:flex; align-items:center; gap:12px;
+  padding:16px 26px; border-bottom:1px solid var(--border-soft);
+}
+.probation-app .section[data-role="hr_division"] .section-head{border-left:4px solid var(--hr);}
+.probation-app .section[data-role="employee"] .section-head{border-left:4px solid var(--employee);}
+.probation-app .section[data-role="supervisor"] .section-head{border-left:4px solid var(--supervisor);}
+.probation-app .section[data-role="sbu_hr"] .section-head{border-left:4px solid var(--sbu);}
+.probation-app .rail-item[data-role="hr_division"] .rail-dot:not(.rail-dot--in_progress):not(.rail-dot--completed){background:var(--hr);}
+.probation-app .section-badge{
+  width:30px; height:30px; border-radius:8px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:700; font-size:13px; color:#fff;
+}
+.probation-app .section[data-role="hr_division"] .section-badge{background:var(--hr);}
+.probation-app .section[data-role="employee"] .section-badge{background:var(--employee);}
+.probation-app .section[data-role="supervisor"] .section-badge{background:var(--supervisor);}
+.probation-app .section[data-role="sbu_hr"] .section-badge{background:var(--sbu);}
+.probation-app .section-headtext{flex:1;}
+.probation-app .section-headtext .section-role{
+  font-size:10.5px; font-weight:700; letter-spacing:0.09em; text-transform:uppercase;
+}
+.probation-app .section[data-role="hr_division"] .section-role{color:var(--hr);}
+.probation-app .section[data-role="employee"] .section-role{color:var(--employee);}
+.probation-app .section[data-role="supervisor"] .section-role{color:var(--supervisor);}
+.probation-app .section[data-role="sbu_hr"] .section-role{color:var(--sbu);}
+.probation-app .section-headtext .section-name{font-family:var(--font-display); font-size:16.5px; font-weight:700; margin-top:1px;}
+.probation-app .owner-chip{
+  font-size:11.5px; font-weight:600; color:var(--slate); background:#F5F6F9;
+  border:1px solid var(--border-soft); border-radius:100px; padding:5px 12px; white-space:nowrap;
+}
+.probation-app .section-body{padding:22px 26px 26px;}
+
+.probation-app .lock-note{
+  font-size:12.5px; color:var(--slate); background:#F5F6F9; border:1px solid var(--border-soft);
+  border-radius:7px; padding:9px 13px; margin:0 0 18px;
+}
+.probation-app .lock-note--done{color:var(--status-completed); background:#EAF6EF; border-color:#CFEBDC; font-weight:600;}
+
+.probation-app .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:18px 22px;}
+.probation-app .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px 22px;}
+.probation-app .grid-5{display:grid; grid-template-columns:repeat(5,1fr); gap:14px;}
+.probation-app .stack{display:flex; flex-direction:column; gap:18px;}
+.probation-app .row-gap{margin-bottom:18px;}
+.probation-app .row-gap:last-child{margin-bottom:0;}
+
+.probation-app .subpanel{
+  background:#FAFBFD; border:1px solid var(--border-soft); border-radius:8px; padding:16px 18px;
+}
+.probation-app .subpanel-title{font-size:11.5px; font-weight:700; color:var(--slate); text-transform:uppercase; letter-spacing:0.06em; margin:0 0 14px;}
+
+/* radio pills */
+.probation-app .pill-group{display:flex; flex-wrap:wrap; gap:10px;}
+.probation-app .pill{
+  display:flex; align-items:center; gap:7px;
+  border:1px solid var(--border); border-radius:8px; padding:9px 13px;
+  font-size:13.5px; font-weight:500; cursor:pointer; background:#fff;
+  transition:border-color .15s, background .15s;
+}
+.probation-app .pill:has(input:checked){border-color:var(--hr); background:var(--hr-bg); font-weight:600;}
+.probation-app .pill:has(input:disabled){cursor:not-allowed; opacity:0.7;}
+.probation-app .pill input{accent-color:var(--hr); margin:0;}
+.probation-app .pill input[type=text]{padding:5px 8px; font-size:13px; width:90px;}
+
+/* signature row */
+.probation-app .sig-row{
+  display:grid; grid-template-columns:1fr 1fr; gap:22px;
+  padding-top:18px; margin-top:4px; border-top:1px dashed var(--border);
+}
+
+/* section save/submit controls */
+.probation-app .section-actions{
+  display:flex; justify-content:flex-end; gap:10px;
+  padding-top:20px; margin-top:20px; border-top:1px solid var(--border-soft);
+}
+.probation-app .btn-primary{
+  background:var(--navy); color:#fff; border:none; border-radius:8px;
+  padding:10px 20px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:var(--font-body);
+}
+.probation-app .btn-primary:hover{background:#0F1930;}
+.probation-app .btn-primary:disabled{opacity:0.6; cursor:not-allowed;}
+.probation-app .btn-ghost{
+  background:#fff; color:var(--navy); border:1px solid var(--border); border-radius:8px;
+  padding:10px 20px; font-size:13.5px; font-weight:600; cursor:pointer; font-family:var(--font-body);
+}
+.probation-app .btn-ghost:disabled{opacity:0.6; cursor:not-allowed;}
+
+/* legend */
+.probation-app .legend{
+  display:flex; justify-content:center; gap:26px; flex-wrap:wrap;
+  background:#FAFBFD; border:1px solid var(--border-soft); border-radius:8px;
+  padding:11px; margin-bottom:18px; font-size:12.5px; font-weight:700;
+}
+.probation-app .legend span{display:flex; align-items:center; gap:6px;}
+.probation-app .legend i{width:9px; height:9px; border-radius:50%; display:inline-block;}
+
+/* eval table */
+.probation-app .eval-table{width:100%; border-collapse:collapse;}
+.probation-app .eval-table th{
+  background:#F6F7FA; font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.05em; color:var(--slate); padding:10px 8px; text-align:center;
+  border-bottom:1px solid var(--border);
+}
+.probation-app .eval-table th:first-child, .probation-app .eval-table th:last-child{text-align:left;}
+.probation-app .eval-table td{padding:12px 8px; border-bottom:1px solid var(--border-soft); vertical-align:top;}
+.probation-app .eval-table tr:last-child td{border-bottom:none;}
+.probation-app .factor-title{font-weight:700; font-size:13px; margin:0 0 3px;}
+.probation-app .factor-desc{font-size:11.5px; color:var(--slate); margin:0; line-height:1.45;}
+.probation-app .grade-cell{text-align:center; width:48px;}
+.probation-app .grade-radio{
+  width:19px; height:19px; border-radius:50%; border:2px solid var(--border);
+  cursor:pointer; appearance:none; -webkit-appearance:none; margin:0 auto; display:block;
+  position:relative; transition:border-color .15s;
+}
+.probation-app .grade-radio:disabled{cursor:not-allowed; opacity:0.6;}
+.probation-app .grade-radio:checked{border-width:6px;}
+.probation-app td[data-grade="A"] .grade-radio:checked{border-color:var(--grade-a);}
+.probation-app td[data-grade="B"] .grade-radio:checked{border-color:var(--grade-b);}
+.probation-app td[data-grade="C"] .grade-radio:checked{border-color:var(--grade-c);}
+.probation-app td[data-grade="D"] .grade-radio:checked{border-color:var(--grade-d);}
+.probation-app .eval-table textarea{
+  width:100%; min-height:52px; border:1px solid var(--border); border-radius:6px;
+  padding:7px 9px; font-family:var(--font-body); font-size:12.5px; resize:vertical; outline:none;
+}
+.probation-app .eval-table textarea:focus{border-color:var(--supervisor); box-shadow:0 0 0 3px rgba(181,114,42,0.12);}
+.probation-app .eval-table textarea:disabled{background:#F5F6F9; color:var(--slate); cursor:not-allowed;}
+.probation-app .table-scroll{overflow-x:auto; margin-bottom:24px; border:1px solid var(--border); border-radius:8px;}
+.probation-app .table-scroll .eval-table{min-width:720px;}
+
+/* results options */
+.probation-app .result-card{
+  display:flex; gap:12px; align-items:flex-start;
+  border:1px solid var(--border); border-radius:8px; padding:13px 15px; margin-bottom:10px;
+  cursor:pointer; transition:border-color .15s, background .15s;
+}
+.probation-app .result-card:last-child{margin-bottom:0;}
+.probation-app .result-card:has(input:checked){border-color:var(--supervisor); background:var(--supervisor-bg);}
+.probation-app .result-card:has(input:disabled){cursor:not-allowed;}
+.probation-app .result-card input{margin-top:2px; accent-color:var(--supervisor); flex-shrink:0;}
+.probation-app .result-card strong{font-size:13.5px;}
+.probation-app .result-card p{margin:2px 0 0; font-size:12.5px; color:var(--slate); line-height:1.5;}
+.probation-app .result-card .inline-date{margin-left:8px;}
+
+/* approval boxes */
+.probation-app .approval-box{
+  border:1px solid var(--border); border-radius:8px; padding:16px 18px; margin-bottom:14px;
+  background:#FAFBFD; border-left:3px solid var(--supervisor);
+}
+.probation-app .approval-box:last-child{margin-bottom:0;}
+.probation-app .approval-title{font-weight:700; font-size:13.5px; margin:0 0 12px; display:flex; align-items:center; gap:8px;}
+.probation-app .approval-title .tag{
+  font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;
+  background:var(--supervisor); color:#fff; padding:2px 8px; border-radius:4px;
+}
+
+.probation-app .inline-input{
+  border:none; border-bottom:1px solid var(--slate-light); padding:3px 4px; font-size:13px;
+  outline:none; background:transparent; font-family:var(--font-body); color:var(--navy); width:auto;
+}
+.probation-app .inline-input:focus{border-bottom-color:var(--hr);}
+.probation-app .inline-input:disabled{color:var(--slate); cursor:not-allowed;}
+
+/* ---- Workflow capsule ---- */
+.probation-app .workflow-capsule{
+  background:#FAFBFD; border:1px solid var(--border-soft); border-radius:8px;
+  padding:14px 16px; margin-top:16px;
+}
+.probation-app .workflow-capsule-steps{display:flex; align-items:center; flex-wrap:wrap; gap:0;}
+.probation-app .wf-step{display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:8px;}
+.probation-app .wf-step-dot{width:9px; height:9px; border-radius:50%; background:var(--status-not-started); flex-shrink:0;}
+.probation-app .wf-step--in_progress .wf-step-dot{background:var(--status-in-progress);}
+.probation-app .wf-step--completed .wf-step-dot{background:var(--status-completed);}
+.probation-app .wf-step-text{display:flex; flex-direction:column; line-height:1.25;}
+.probation-app .wf-step-label{font-size:12.5px; font-weight:700; color:var(--navy);}
+.probation-app .wf-step-owner{font-size:11px; color:var(--slate);}
+.probation-app .wf-connector{width:28px; height:2px; background:var(--border); margin:0 4px;}
+.probation-app .wf-connector--done{background:var(--status-completed);}
+.probation-app .wf-summary{margin-top:10px; font-size:12px; color:var(--slate); font-weight:600;}
+
+@media (max-width:880px){
+  .probation-app .wf-connector{width:14px;}
+}
+
+@media (max-width:880px){
+  .probation-app .shell{grid-template-columns:1fr; padding:20px 16px 0;}
+  .probation-app .rail{
+    position:static; flex-direction:row; overflow-x:auto; gap:6px;
+    background:#fff; border:1px solid var(--border); border-radius:10px; padding:8px; margin-bottom:18px;
+  }
+  .probation-app .rail-item{flex-shrink:0;}
+  .probation-app .rail-item small{display:none;}
+  .probation-app .id-row, .probation-app .grid-2, .probation-app .grid-3{grid-template-columns:1fr;}
+  .probation-app .grid-5{grid-template-columns:repeat(2,1fr);}
+  .probation-app .sig-row{grid-template-columns:1fr;}
+  .probation-app .topbar{padding:12px 16px;}
+}
+
+@media print{
+  .probation-app .topbar, .probation-app .rail, .probation-app .section-actions, .probation-app .lock-note{display:none !important;}
+  .probation-app{padding-bottom:0; background:#fff;}
+  .probation-app .shell{grid-template-columns:1fr; padding:0; max-width:100%;}
+  .probation-app .section{break-inside:avoid; box-shadow:none;}
+}
