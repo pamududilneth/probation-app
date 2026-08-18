@@ -310,6 +310,23 @@
 .probation-app .wf-connector--done{background:var(--status-completed);}
 .probation-app .wf-summary{margin-top:10px; font-size:12px; color:var(--slate); font-weight:600;}
 
+.probation-app .sig-pad{
+  position:relative; border:1.5px dashed var(--border); border-radius:8px;
+  background:#fff; touch-action:none; overflow:hidden;
+}
+.probation-app .sig-pad canvas{ display:block; width:100%; height:90px; cursor:crosshair; }
+.probation-app .sig-pad--disabled{ background:#F5F6F9; border-style:solid; }
+.probation-app .sig-pad--disabled canvas{ cursor:not-allowed; }
+.probation-app .sig-pad-hint{
+  position:absolute; bottom:8px; left:12px; font-size:11.5px; color:var(--slate-light);
+  pointer-events:none; font-style:italic;
+}
+.probation-app .sig-clear-btn{
+  margin-top:6px; align-self:flex-start; background:none; border:none;
+  color:var(--hr); font-size:12px; font-weight:600; cursor:pointer; padding:0;
+}
+.probation-app .sig-clear-btn:hover{ text-decoration:underline; }
+
 @media (max-width:880px){
   .probation-app .wf-connector{width:14px;}
 }
