@@ -29,7 +29,7 @@ export default function WorkflowCapsule({ sections = [], assignments = [] }) {
           return (
             <React.Fragment key={o.key}>
               <div className={`wf-step wf-step--${status}`}>
-                <span className="wf-step-dot" />
+                <span className="wf-step-dot" />   
                 <div className="wf-step-text">
                   <span className="wf-step-label">{o.label}</span>
                   <span className="wf-step-owner">
