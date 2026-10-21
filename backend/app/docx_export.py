@@ -3,19 +3,22 @@ Fills the ORIGINAL Word template (word/document.xml, untouched layout) with
 the current form data and returns the resulting .docx as bytes.
 
 Approach: rather than regenerating the document from scratch, we open the
-exact uploaded template and insert new runs/paragraphs at precise, manually
-mapped locations (row/cell/paragraph indices verified against the real
-file) — so every label, merged cell, and column width stays exactly as
-authored. We do not touch the floating HOD/CEO approval drawing canvas
-(Word renders that as a positioned textbox, not plain cell text, and
-editing it via python-docx risks corrupting the drawing) — instead, a
-clearly labeled summary of those two decisions is inserted as a new
-paragraph directly below it, before the SBU HR table.
+exact uploaded template and insert new runs/paragraphs/images at precise,
+manually mapped locations (row/cell/paragraph indices verified against the
+real file) — so every label, merged cell, and column width stays exactly as
+authored. Signature fields arrive as actual drawn images (canvas PNG data
+URLs from the frontend), not typed names, and are embedded as real inline
+pictures. The HOD/CEO approval boxes are Word floating textboxes — we edit
+their "Signature:" / "Date:" / decision-checkbox text directly, in place,
+rather than writing a summary elsewhere.
 """
+import base64
 import io
 from pathlib import Path
 
 import docx
+from docx.oxml.ns import qn
+from docx.shared import Pt
 
 TEMPLATE_PATH = Path(__file__).parent / "templates" / "probation_template.docx"
 
@@ -33,21 +36,11 @@ RESULT_LABELS = {
 }
 DECISION_LABELS = {"confirm": "Confirm", "extend": "Extend Probation", "not-suitable": "Not Suitable for Employment"}
 
-# Grade column index within the nested evaluation table (0-based cell index
-# per row; A/B/C/D cells are partially merged so any index within the merge
-# resolves to the same underlying cell).
 GRADE_COLUMN = {"A": 2, "B": 4, "C": 5, "D": 6}
 COMMENT_COLUMN = 7
 
 
 def _insert_after(paragraph, match_substr, value, bold=False, skip=0):
-    """Insert a new run containing `value` immediately after the run whose
-    text contains `match_substr` — keeps the answer sitting right next to
-    its label without disturbing the label's own formatting. Some labels
-    keep their trailing colon in a separate run from the label text itself
-    (e.g. "Employment Date" then ":" as two runs) — `skip` lets us anchor
-    after that colon run instead of before it, so the value doesn't end up
-    sitting in front of the colon."""
     if not value:
         return False
     runs = paragraph.runs
@@ -62,15 +55,81 @@ def _insert_after(paragraph, match_substr, value, bold=False, skip=0):
 
 
 def _fill_blank_paragraph(cell, index, value):
-    """Writes into the paragraph at `index` if it exists (the template
-    leaves blank spacer paragraphs under most free-text labels); otherwise
-    appends a new one."""
     if not value:
         return
     if index < len(cell.paragraphs):
         cell.paragraphs[index].add_run(str(value))
     else:
         cell.add_paragraph(str(value))
+
+
+def _decode_signature(value):
+    """Signature fields arrive from the frontend as a canvas-drawn PNG data
+    URL (e.g. 'data:image/png;base64,....'), not typed text — a typed name
+    isn't a signature. Returns raw image bytes, or None if there's nothing
+    (or something malformed) to embed."""
+    if not value or not isinstance(value, str) or not value.startswith("data:image"):
+        return None
+    try:
+        _, b64data = value.split(",", 1)
+        return base64.b64decode(b64data)
+    except Exception:
+        return None
+
+
+def _insert_image_after_label(paragraph, label_marker, image_bytes, height_pt=26):
+    """Splits the run containing `label_marker` (e.g. 'Signature:') right
+    after the label, inserts the actual signature image there, and puts
+    whatever text originally followed the label back afterwards unchanged."""
+    if not image_bytes:
+        return False
+    for run in list(paragraph.runs):
+        if label_marker in run.text:
+            idx = run.text.find(label_marker) + len(label_marker)
+            before, after = run.text[:idx], run.text[idx:]
+            run.text = before
+            img_run = paragraph.add_run()
+            img_run.add_picture(io.BytesIO(image_bytes), height=Pt(height_pt))
+            run._element.addnext(img_run._element)
+            if after:
+                after_run = paragraph.add_run(after)
+                after_run.bold = run.bold
+                img_run._element.addnext(after_run._element)
+            return True
+    return False
+
+
+def _find_drawing_signature_paragraphs(doc, container_elem, marker="Signature:"):
+    """The HOD/CEO approval boxes are Word floating textboxes, which Word
+    duplicates internally (once for modern rendering, once for legacy
+    compatibility) — so the same visible line can exist as 2-4 near-
+    identical paragraph copies in the XML. We edit every copy we find so
+    the result is correct regardless of which one a given Word version
+    actually renders."""
+    from docx.text.paragraph import Paragraph
+
+    out = []
+    for txbx in container_elem.findall(".//" + qn("w:txbxContent")):
+        for p in txbx.findall(qn("w:p")):
+            if marker in "".join(p.itertext()):
+                out.append(Paragraph(p, doc))
+    return out
+
+
+def _mark_decision(paragraphs, decision, extend_duration=""):
+    """Ticks off the chosen option (Confirm / Extend Probation by... /
+    Not Suitable for Employment) directly inside the approval box."""
+    if not decision:
+        return
+    if decision == "confirm":
+        for p in paragraphs:
+            _insert_after(p, "Confirm", "\u2713", bold=True)
+    elif decision == "extend":
+        for p in paragraphs:
+            _insert_after(p, "Extend Probation by", "\u2713", bold=True)
+    elif decision == "not-suitable":
+        for p in paragraphs:
+            _insert_after(p, "Not Suitable for Employment", "\u2713", bold=True)
 
 
 def _replace_placeholder_runs(container_paragraphs, full_name, epf):
@@ -103,8 +162,6 @@ def generate_docx(data: dict) -> bytes:
     full_name = data.get("fullName", "")
     epf = data.get("epfTop") or data.get("epfNum", "")
 
-    # The "Probation Progress Review of [Full Name] – [EPF Num]" heading
-    # appears twice (top of document, and again above the evaluation table).
     _replace_placeholder_runs(list(_walk_all_paragraphs(doc)), full_name, epf)
 
     t = doc.tables[0]
@@ -131,11 +188,10 @@ def generate_docx(data: dict) -> bytes:
     _insert_after(p4, "Department:", data.get("dept", ""))
     _insert_after(p4, "Designation:", data.get("designation", ""))
 
-    # Row 5 — Employment Date (label and its colon are separate runs, so
-    # skip past the colon before inserting the value)
+    # Row 5 — Employment Date
     _insert_after(t.rows[5].cells[0].paragraphs[0], "Employment Date", data.get("empDate", ""), skip=1)
 
-    # Row 6 — Supervisor's Name / Title (same separate-colon situation)
+    # Row 6 — Supervisor's Name / Title
     p6 = t.rows[6].cells[0].paragraphs[0]
     _insert_after(p6, "Supervisor\u2019s Name", data.get("supName", ""), skip=1)
     _insert_after(p6, "Supervisor\u2019s Title", data.get("supTitle", ""), skip=1)
@@ -155,11 +211,11 @@ def generate_docx(data: dict) -> bytes:
     _fill_blank_paragraph(t.rows[10].cells[0], 1, data.get("devSteps", ""))
 
     # Row 11 — Employee signature / date
-    if data.get("empSig") or data.get("empSigDate"):
-        p11 = t.rows[11].cells[0].paragraphs[0]
-        p11.add_run(f"   {data.get('empSig', '')}        (Signed {data.get('empSigDate', '')})")
+    p11 = t.rows[11].cells[0].paragraphs[0]
+    _insert_image_after_label(p11, "Signature:", _decode_signature(data.get("empSig")))
+    _insert_after(p11, "Date", data.get("empSigDate", ""))
 
-    # Nested evaluation table (11 factor rows, rows 2..12 of the nested table)
+    # Nested evaluation table
     nested = t.rows[13].cells[0].tables[0]
     for i, factor in enumerate(FACTORS_ORDER):
         row = nested.rows[i + 2]
@@ -175,7 +231,7 @@ def generate_docx(data: dict) -> bytes:
             para = cell.paragraphs[0] if cell.paragraphs else cell.add_paragraph()
             para.add_run(str(comment))
 
-    # Row 13 cell — Comments on Overall Progress / strengths / improvements
+    # Row 13 cell — Comments / strengths / improvements
     cell13 = t.rows[13].cells[0]
     _fill_blank_paragraph(cell13, 5, data.get("overallProgress", ""))
     _fill_blank_paragraph(cell13, 9, data.get("strengths", ""))
@@ -195,48 +251,49 @@ def generate_docx(data: dict) -> bytes:
     _fill_blank_paragraph(t.rows[16].cells[0], 1, data.get("assistSteps", ""))
 
     # Row 17 — Supervisor signature / date
-    if data.get("supSig") or data.get("supSigDate"):
-        p17 = t.rows[17].cells[0].paragraphs[0]
-        p17.add_run(f"   {data.get('supSig', '')}        (Signed {data.get('supSigDate', '')})")
+    p17 = t.rows[17].cells[0].paragraphs[0]
+    _insert_image_after_label(p17, "Signature:", _decode_signature(data.get("supSig")))
+    _insert_after(p17, "Date", data.get("supSigDate", ""))
 
-    # HOD / CEO decisions — inserted as a new summary paragraph immediately
-    # before the SBU HR table (see module docstring for why we don't edit
-    # the drawing canvas directly).
+    # HOD / CEO decisions — edited directly inside the approval boxes
+    # themselves, not written as a separate summary elsewhere.
     hod, ceo = data.get("hodDecision"), data.get("ceoDecision")
-    if hod or ceo or data.get("hodSig") or data.get("ceoSig"):
-        anchor_elem = doc.tables[1]._element
-        for p in doc.paragraphs:
-            if "SBU HR Division" in p.text:
-                anchor_elem = p._element
-                break
-        lines = []
-        if hod:
-            label = DECISION_LABELS.get(hod, hod)
-            extra = f" by {data.get('hodExtendDuration', '')}" if hod == "extend" else ""
-            lines.append(
-                f"Head of the Department Decision: {label}{extra}  —  "
-                f"{data.get('hodSig', '')}  ({data.get('hodSigDate', '')})"
-            )
-        if ceo:
-            label = DECISION_LABELS.get(ceo, ceo)
-            extra = f" by {data.get('ceoExtendDuration', '')}" if ceo == "extend" else ""
-            lines.append(
-                f"CEO Decision: {label}{extra}  —  "
-                f"{data.get('ceoSig', '')}  ({data.get('ceoSigDate', '')})"
-            )
-        for line in lines:
-            new_p = doc.add_paragraph()
-            run = new_p.add_run(line)
-            run.bold = True
-            anchor_elem.addprevious(new_p._element)
+    body_children = list(doc.element.body)
+    tbl_elems = [c for c in body_children if c.tag == qn("w:tbl")]
+    idx_table0 = body_children.index(tbl_elems[0])
+
+    hod_container = body_children[idx_table0 + 1]
+    ceo_container = None
+    for c in body_children[idx_table0 + 1:]:
+        if c.tag == qn("w:p") and "CEO" in "".join(c.itertext()):
+            ceo_container = c
+            break
+
+    for container, decision, extend_key, sig_key, sig_date_key in [
+        (hod_container, hod, "hodExtendDuration", "hodSig", "hodSigDate"),
+        (ceo_container, ceo, "ceoExtendDuration", "ceoSig", "ceoSigDate"),
+    ]:
+        if container is None:
+            continue
+        sig_paragraphs = _find_drawing_signature_paragraphs(doc, container, marker="Signature:")
+        decision_paragraphs = _find_drawing_signature_paragraphs(doc, container, marker="Confirm")
+        if not sig_paragraphs:
+            continue
+
+        _mark_decision(decision_paragraphs, decision, data.get(extend_key, ""))
+
+        sig_bytes = _decode_signature(data.get(sig_key))
+        for p in sig_paragraphs:
+            _insert_image_after_label(p, "Signature:", sig_bytes, height_pt=20)
+            _insert_after(p, "Date", data.get(sig_date_key, ""))
 
     # Table 1 — SBU HR
     t1 = doc.tables[1]
     if data.get("sbuComments"):
         t1.rows[0].cells[0].add_paragraph(str(data["sbuComments"]))
-    if data.get("sbuSig") or data.get("sbuSigDate"):
-        p_sbu = t1.rows[1].cells[0].paragraphs[0]
-        p_sbu.add_run(f"   {data.get('sbuSig', '')}        (Signed {data.get('sbuSigDate', '')})")
+    p_sbu = t1.rows[1].cells[0].paragraphs[0]
+    _insert_image_after_label(p_sbu, "Signature:", _decode_signature(data.get("sbuSig")))
+    _insert_after(p_sbu, "Date", data.get("sbuSigDate", ""))
 
     buf = io.BytesIO()
     doc.save(buf)

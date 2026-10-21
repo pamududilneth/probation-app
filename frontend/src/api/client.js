@@ -81,3 +81,30 @@ export async function exportFormDocx(formId) {
   const filename = match ? match[1] : `Probation_Review_${formId}.docx`;
   return { blob: response.data, filename };
 }
+
+export async function deleteUser(userId) {
+  const { data } = await api.delete(`/admin/users/${userId}`);
+  return data;
+}
+
+// Shared access code gate (stopgap while the app uses the simple dev login)
+api.interceptors.request.use((config) => {
+  let code = window.localStorage.getItem('accessCode');
+  if (!code) {
+    code = window.prompt('Enter the access code to continue:') || '';
+    if (code) window.localStorage.setItem('accessCode', code);
+  }
+  config.headers['X-Access-Code'] = code;
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401 && error?.response?.data?.detail === 'Access code required') {
+      window.localStorage.removeItem('accessCode');
+      window.location.reload();
+    }
+    return Promise.reject(error);
+  }
+);

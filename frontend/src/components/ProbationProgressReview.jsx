@@ -1,6 +1,7 @@
 import React from 'react';
 import './ProbationProgressReview.css';
 import WorkflowCapsule from './WorkflowCapsule';
+import SignaturePad from './SignaturePad';
 
 const FACTORS = [
   { id: 'job_knowledge', title: 'Job Knowledge', desc: 'Understanding of all aspects of the work; resourcefulness in handling assignments.' },
@@ -233,7 +234,7 @@ export default function ProbationProgressReview({
                   value={get('devSteps')} disabled={!sectionEditable('employee')} onChange={set('devSteps')} />
               </div>
               <div className="sig-row">
-                <Field id="empSig" label="Employee Signature" placeholder="Type full name to sign" value={get('empSig')} disabled={!sectionEditable('employee')} onChange={set('empSig')} />
+                <SignaturePad id="empSig" label="Employee Signature" value={get('empSig')} disabled={!sectionEditable('employee')} onChange={set('empSig')} />
                 <Field id="empSigDate" label="Date" type="date" value={get('empSigDate')} disabled={!sectionEditable('employee')} onChange={set('empSigDate')} />
               </div>
 
@@ -335,7 +336,7 @@ export default function ProbationProgressReview({
               </div>
 
               <div className="sig-row row-gap">
-                <Field id="supSig" label="Supervisor Signature" placeholder="Type full name to sign" value={get('supSig')} disabled={!sectionEditable('supervisor')} onChange={set('supSig')} />
+                <SignaturePad id="supSig" label="Supervisor Signature" value={get('supSig')} disabled={!sectionEditable('supervisor')} onChange={set('supSig')} />
                 <Field id="supSigDate" label="Date" type="date" value={get('supSigDate')} disabled={!sectionEditable('supervisor')} onChange={set('supSigDate')} />
               </div>
 
@@ -354,7 +355,7 @@ export default function ProbationProgressReview({
                   <RadioPill group="hodDecision" value="not-suitable" checked={get('hodDecision') === 'not-suitable'} disabled={!sectionEditable('supervisor')} onChange={set('hodDecision')}>Not Suitable for Employment</RadioPill>
                 </div>
                 <div className="sig-row" style={{ borderTop: '1px dashed var(--border)', paddingTop: 14, marginTop: 2 }}>
-                  <Field id="hodSig" label="Signature" value={get('hodSig')} disabled={!sectionEditable('supervisor')} onChange={set('hodSig')} />
+                  <SignaturePad id="hodSig" label="Signature" value={get('hodSig')} disabled={!sectionEditable('supervisor')} onChange={set('hodSig')} />
                   <Field id="hodSigDate" label="Date" type="date" value={get('hodSigDate')} disabled={!sectionEditable('supervisor')} onChange={set('hodSigDate')} />
                 </div>
               </div>
@@ -374,7 +375,7 @@ export default function ProbationProgressReview({
                   <RadioPill group="ceoDecision" value="not-suitable" checked={get('ceoDecision') === 'not-suitable'} disabled={!sectionEditable('supervisor')} onChange={set('ceoDecision')}>Not Suitable for Employment</RadioPill>
                 </div>
                 <div className="sig-row" style={{ borderTop: '1px dashed var(--border)', paddingTop: 14, marginTop: 2 }}>
-                  <Field id="ceoSig" label="CEO Signature" value={get('ceoSig')} disabled={!sectionEditable('supervisor')} onChange={set('ceoSig')} />
+                  <SignaturePad id="ceoSig" label="CEO Signature" value={get('ceoSig')} disabled={!sectionEditable('supervisor')} onChange={set('ceoSig')} />
                   <Field id="ceoSigDate" label="Date" type="date" value={get('ceoSigDate')} disabled={!sectionEditable('supervisor')} onChange={set('ceoSigDate')} />
                 </div>
               </div>
@@ -396,7 +397,7 @@ export default function ProbationProgressReview({
                   value={get('sbuComments')} disabled={!sectionEditable('sbu_hr')} onChange={set('sbuComments')} />
               </div>
               <div className="sig-row">
-                <Field id="sbuSig" label="Signature" value={get('sbuSig')} disabled={!sectionEditable('sbu_hr')} onChange={set('sbuSig')} />
+                <SignaturePad id="sbuSig" label="Signature" value={get('sbuSig')} disabled={!sectionEditable('sbu_hr')} onChange={set('sbuSig')} />
                 <Field id="sbuSigDate" label="Date" type="date" value={get('sbuSigDate')} disabled={!sectionEditable('sbu_hr')} onChange={set('sbuSigDate')} />
               </div>
 
