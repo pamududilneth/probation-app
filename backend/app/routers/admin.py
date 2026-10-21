@@ -30,6 +30,28 @@ def set_user_role(user_id: str, body: RoleUpdateRequest, db: Session = Depends(g
     db.refresh(user)
     return user
 
+@router.delete("/users/{user_id}")
+def delete_user(user_id: str, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    user = db.query(User).get(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user.id == admin.id:
+        raise HTTPException(status_code=400, detail="You can't remove your own account.")
+
+    assigned = db.query(FormAssignment).filter(FormAssignment.user_id == user.id).count()
+    created = db.query(FormInstance).filter(FormInstance.created_by == user.id).count()
+    completed = db.query(FormSection).filter(FormSection.completed_by == user.id).count()
+    if assigned or created or completed:
+        raise HTTPException(
+            status_code=409,
+            detail="This user is linked to existing forms (assigned, created, or signed off), so they can't be removed.",
+        )
+
+    db.delete(user)
+    db.commit()
+    return {"deleted": True}
+
 
 def _find_user_by_email_or_404(db: Session, email: str) -> User:
     user = db.query(User).filter(User.email == email).first()
